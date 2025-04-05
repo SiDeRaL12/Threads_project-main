@@ -1,39 +1,51 @@
 import React, { useEffect, useState } from "react";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebase/firebase-config";
 import { doc, getDoc } from "firebase/firestore";
 
-const UserProfilepic = () => {
+const UserProfilepic = ({ size = "small" }) => {  
   const [photoURL, setPhotoURL] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      const user = getAuth().currentUser;
+    const auth = getAuth();
 
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const userDoc = doc(db, "users", user.uid);
-        const userSnapshot = await getDoc(userDoc);
+        try {
+          const userDoc = doc(db, "users", user.uid);
+          const userSnapshot = await getDoc(userDoc);
 
-        if (userSnapshot.exists()) {
-          const data = userSnapshot.data();
-          setPhotoURL(data.photoURL || user.photoURL); // Fallback to Google photo if no Firestore photo
-        } else {
-          setPhotoURL(user.photoURL); // Use Google profile photo if no Firestore photo
+          if (userSnapshot.exists()) {
+            const data = userSnapshot.data();
+            setPhotoURL(data.photoURL || user.photoURL);
+          } else {
+            setPhotoURL(user.photoURL);
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
         }
       }
-
       setLoading(false);
-    };
+    });
 
-    fetchUserProfile();
-  }, []);  // Empty dependency array to only run once on mount
+    return () => unsubscribe(); 
+  }, []);
 
+  if (loading) {
+    return <p>Loading...</p>; 
+  }
 
+  const imgClass = size === "small" ? "w-8 h-8" : "w-24 h-24"; // Modify for larger size on profile
 
   return (
     <div>
       {photoURL ? (
-        <img src={photoURL} alt="User Profile" className="w-8 h-8 rounded-full" />
+        <img
+          src={photoURL}
+          alt="User Profile"
+          className={`${imgClass} rounded-full object-cover`}
+        />
       ) : (
         <p>No profile picture set.</p>
       )}

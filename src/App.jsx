@@ -2,11 +2,12 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from "react-route
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Home from "./pages/Home.jsx";
-import Settings from "./pages/Settings.jsx";
 import Post from "./pages/Post.jsx";
 import "./index.css";
 import "./App.css";
 import BottomNav from "./components/BottomNav.jsx";
+import Settings from "./Pages/Settings.jsx";
+import Profile from "./Pages/Profile.jsx";
 
 
 function Layout() {
@@ -18,6 +19,7 @@ function Layout() {
             <Routes>
                 <Route path="/" element={<SignUp />} />
                 <Route path="/signup" element={<SignUp />} />
+                <Route path="/profile" element={<Profile />} />
                 <Route path="/signin" element={<SignIn />} />
                 <Route path="/home" element={<Home />} />
                 <Route path="/post" element={<Post />} />
