@@ -41,11 +41,12 @@ const UserProfilepic = ({ size = "small" }) => {
   return (
     <div>
       {photoURL ? (
-        <img
-          src={photoURL}
-          alt="User Profile"
-          className={`${imgClass} rounded-full object-cover`}
-        />
+       <img
+       src={photoURL}
+       alt="User Profile"
+       className={`${imgClass} rounded-full object-cover`}
+     />
+     
       ) : (
         <p>No profile picture set.</p>
       )}

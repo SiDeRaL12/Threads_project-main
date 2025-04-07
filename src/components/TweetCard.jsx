@@ -21,6 +21,7 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "../firebase/firebase-config";
 import CommentCard from "./CommentCard.jsx";
+import TweetAvatar from "./TweetAvatar.jsx";
 
 const defaultAvatars = [
     "https://placekitten.com/100/100",
@@ -34,10 +35,7 @@ const TweetCard = ({ tweet, tweetId }) => {
     const userId = auth.currentUser?.uid;
     const email = tweet.userEmail || "unknown@thread.app";
     const username = email.split("@")[0]?.replace(/[.\s-]/g, "_");
-    const avatar =
-        tweet.photoURL ||
-        defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
-
+  
     const [likes, setLikes] = useState(tweet.likes || []);
     const [liked, setLiked] = useState(likes.includes(userId));
     const [showComments, setShowComments] = useState(false);
@@ -46,7 +44,7 @@ const TweetCard = ({ tweet, tweetId }) => {
     const [hasRetweeted, setHasRetweeted] = useState(false);
     const [retweetCount, setRetweetCount] = useState(0);
 
-    // 🧠 Real-time comment updates
+    //  Real-time comment updates
     useEffect(() => {
         const commentsRef = collection(db, `tweets/${tweetId}/comments`);
         const unsub = onSnapshot(commentsRef, (snap) => {
@@ -56,7 +54,7 @@ const TweetCard = ({ tweet, tweetId }) => {
         return () => unsub();
     }, [tweetId]);
 
-    // ✅ Check if user has retweeted
+    //  Check if user has retweeted
     useEffect(() => {
         const checkRetweet = async () => {
             const q = query(
@@ -71,7 +69,7 @@ const TweetCard = ({ tweet, tweetId }) => {
         checkRetweet();
     }, [tweetId, userId]);
 
-    // ✅ Real-time retweet count
+    //  Real-time retweet count
     useEffect(() => {
         const q = query(
             collection(db, "tweets"),
@@ -144,11 +142,10 @@ const TweetCard = ({ tweet, tweetId }) => {
 
             {/* Header */}
             <div className="flex items-center gap-3">
-                <img
-                    src={avatar}
-                    alt="Avatar"
-                    className="w-10 h-10 rounded-full object-cover"
-                />
+            <TweetAvatar
+          tweetUserId={tweet.userId}
+          tweetPhotoURL={tweet.photoURL}
+        />
                 <div>
                     <p className="text-sm font-medium text-gray-800 dark:text-white">
                         @{username}
