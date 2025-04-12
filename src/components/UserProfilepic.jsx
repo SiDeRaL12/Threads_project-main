@@ -3,7 +3,15 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebase/firebase-config";
 import { doc, getDoc } from "firebase/firestore";
 
-const UserProfilepic = ({ size = "small" }) => {  
+const defaultAvatars = [
+  "https://placekitten.com/100/100",
+  "https://place-puppy.com/100x100",
+  "https://randomfox.ca/images/1.jpg",
+  "https://loremflickr.com/100/100/hamster",
+  "https://loremflickr.com/100/100/dog",
+];
+
+const UserProfilepic = ({ size = "small" }) => {
   const [photoURL, setPhotoURL] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -29,27 +37,26 @@ const UserProfilepic = ({ size = "small" }) => {
       setLoading(false);
     });
 
-    return () => unsubscribe(); 
+    return () => unsubscribe();
   }, []);
 
   if (loading) {
-    return <p>Loading...</p>; 
+    return <p>Loading...</p>;
   }
 
   const imgClass = size === "small" ? "w-8 h-8" : "w-24 h-24"; // Modify for larger size on profile
 
+  // If no photoURL, pick a random avatar
+  const avatarToUse = photoURL || defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
+
   return (
     <div>
-      {photoURL ? (
-       <img
-       src={photoURL}
-       alt="User Profile"
-       className={`${imgClass} rounded-full object-cover`}
-     />
-     
-      ) : (
-        <p>No profile picture set.</p>
-      )}
+      <img
+        src={avatarToUse} // Use the random avatar if no photoURL
+        alt="User Profile"
+        className={`${imgClass} rounded-full object-cover border border-gray-300`}
+        onError={() => console.error("Error loading profile picture:", avatarToUse)}
+      />
     </div>
   );
 };

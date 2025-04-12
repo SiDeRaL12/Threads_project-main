@@ -5,6 +5,7 @@ import {
     MessageCircle,
     Repeat2,
     Send,
+    X
 } from "lucide-react";
 import {
     doc,
@@ -18,24 +19,19 @@ import {
     query,
     where,
     onSnapshot,
+    deleteDoc
 } from "firebase/firestore";
 import { db, auth } from "../firebase/firebase-config";
 import CommentCard from "./CommentCard.jsx";
 import TweetAvatar from "./TweetAvatar.jsx";
 
-const defaultAvatars = [
-    "https://placekitten.com/100/100",
-    "https://place-puppy.com/100x100",
-    "https://randomfox.ca/images/1.jpg",
-    "https://loremflickr.com/100/100/hamster",
-    "https://loremflickr.com/100/100/dog",
-];
+// Existing default avatars...
 
-const TweetCard = ({ tweet, tweetId }) => {
+const TweetCard = ({ tweet, tweetId, onDelete }) => {
     const userId = auth.currentUser?.uid;
     const email = tweet.userEmail || "unknown@thread.app";
     const username = email.split("@")[0]?.replace(/[.\s-]/g, "_");
-  
+
     const [likes, setLikes] = useState(tweet.likes || []);
     const [liked, setLiked] = useState(likes.includes(userId));
     const [showComments, setShowComments] = useState(false);
@@ -44,7 +40,7 @@ const TweetCard = ({ tweet, tweetId }) => {
     const [hasRetweeted, setHasRetweeted] = useState(false);
     const [retweetCount, setRetweetCount] = useState(0);
 
-    //  Real-time comment updates
+    // Real-time comment updates...
     useEffect(() => {
         const commentsRef = collection(db, `tweets/${tweetId}/comments`);
         const unsub = onSnapshot(commentsRef, (snap) => {
@@ -54,7 +50,7 @@ const TweetCard = ({ tweet, tweetId }) => {
         return () => unsub();
     }, [tweetId]);
 
-    //  Check if user has retweeted
+    // Check if user has retweeted...
     useEffect(() => {
         const checkRetweet = async () => {
             const q = query(
@@ -69,7 +65,7 @@ const TweetCard = ({ tweet, tweetId }) => {
         checkRetweet();
     }, [tweetId, userId]);
 
-    //  Real-time retweet count
+    // Real-time retweet count...
     useEffect(() => {
         const q = query(
             collection(db, "tweets"),
@@ -82,6 +78,7 @@ const TweetCard = ({ tweet, tweetId }) => {
         return () => unsub();
     }, [tweetId]);
 
+    // Handle like...
     const handleLike = async () => {
         const ref = doc(db, "tweets", tweetId);
         try {
@@ -97,6 +94,7 @@ const TweetCard = ({ tweet, tweetId }) => {
         }
     };
 
+    // Handle retweet...
     const handleRetweet = async () => {
         if (hasRetweeted) return;
         try {
@@ -114,6 +112,7 @@ const TweetCard = ({ tweet, tweetId }) => {
         }
     };
 
+    // Handle comment submit...
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
         if (!commentInput.trim()) return;
@@ -131,6 +130,19 @@ const TweetCard = ({ tweet, tweetId }) => {
         }
     };
 
+    // Handle tweet delete
+    const handleDelete = async () => {
+        const tweetRef = doc(db, "tweets", tweetId);
+        try {
+            // Delete the tweet from Firestore
+            await deleteDoc(tweetRef);
+            // Call onDelete to update the UI and remove the tweet from the parent component's state
+            onDelete(tweetId);
+        } catch (err) {
+            console.error("Delete failed:", err);
+        }
+    };
+
     return (
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow space-y-2">
             {/* Retweet label */}
@@ -142,10 +154,7 @@ const TweetCard = ({ tweet, tweetId }) => {
 
             {/* Header */}
             <div className="flex items-center gap-3">
-            <TweetAvatar
-          tweetUserId={tweet.userId}
-          tweetPhotoURL={tweet.photoURL}
-        />
+                <TweetAvatar tweetUserId={tweet.userId} tweetPhotoURL={tweet.photoURL} />
                 <div>
                     <p className="text-sm font-medium text-gray-800 dark:text-white">
                         @{username}
@@ -154,6 +163,13 @@ const TweetCard = ({ tweet, tweetId }) => {
                         {tweet.createdAt?.toDate?.().toLocaleString() || "Just now"}
                     </p>
                 </div>
+                {/* X Button */}
+                <button
+                    onClick={handleDelete}
+                    className="ml-auto text-gray-500 dark:text-gray-400 hover:text-red-500"
+                >
+                    <X size={20} />
+                </button>
             </div>
 
             {/* Content */}
@@ -190,9 +206,7 @@ const TweetCard = ({ tweet, tweetId }) => {
                 <button
                     onClick={handleRetweet}
                     disabled={hasRetweeted}
-                    className={`flex items-center gap-1 ${
-                        hasRetweeted ? "opacity-50" : ""
-                    }`}
+                    className={`flex items-center gap-1 ${hasRetweeted ? "opacity-50" : ""}`}
                 >
                     <Repeat2 size={18} />
                     {retweetCount}
